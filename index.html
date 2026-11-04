@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>QlsOS — Quick Light Secure OS</title>
+<meta name="description" content="QlsOS: a small capability microkernel written from scratch. Own bootloader, kernel, drivers and shell. x86 and ARM.">
+<meta name="theme-color" content="#000000">
+<meta property="og:title" content="QlsOS — Quick Light Secure OS">
+<meta property="og:description" content="A small capability microkernel written from scratch.">
+<link rel="canonical" href="https://qlsos.github.io/">
+<meta property="og:type" content="website"><meta property="og:url" content="https://qlsos.github.io/"><meta property="og:image" content="https://qlsos.github.io/assets/img/og.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="QlsOS — Quick Light Secure OS"><meta name="twitter:image" content="https://qlsos.github.io/assets/img/og.png">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png"><link rel="manifest" href="site.webmanifest">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareSourceCode","name":"QlsOS","description":"A small capability microkernel written from scratch.","codeRepository":"https://github.com/qlsdev/QlsOS","license":"https://www.mozilla.org/MPL/2.0/","url":"https://qlsos.github.io/"}</script>
+<link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+<link rel="stylesheet" href="assets/lasurpixel/lasurpixel.css"><link rel="stylesheet" href="assets/css/style.css">
+<script src="assets/lasurpixel/lasurpixel.js"></script>
+<script src="data/metrics.js"></script>
+<script src="data/roadmap.js"></script>
+<script src="data/site.js"></script>
+<script src="data/docs-ru.js"></script>
+<script src="assets/js/i18n.js" defer></script>
+<script src="assets/js/main.js" defer></script>
+</head>
+<body>
+<div class="bg"><i></i><i></i><i></i></div>
+<header class="gl"><div class="wrap">
+ <a class="brand" href="#top"><img src="assets/img/logo-mark.svg" alt=""><span class="bn">Qls<b>OS</b></span></a>
+ <button id="menu" class="lp-ib" aria-label="Menu">☰</button>
+ <nav>
+  <a href="#principles">Principles</a><a href="#architecture">Architecture</a><a href="#why" data-ru="Почему">Why QlsOS</a><a href="#roadmap" data-ru="Карта">Roadmap</a><a href="#hardware" data-ru="Железо">Hardware</a><a href="#start" data-ru="Старт">Quick start</a><a href="#download">Download</a><a href="#docs" data-ru="Документы">Docs</a><a href="#contribute" data-ru="Вклад">Contribute</a>
+ </nav>
+ <div class="tl"><a class="lp-ib w" href="https://github.com/qlsdev/QlsOS">GitHub ↗</a><button id="lang" class="lp-ib w" aria-label="Language">RU</button><button id="theme" class="lp-ib" aria-label="Theme">◐</button></div>
+</div></header>
+
+<main id="top">
+<div class="wrap hero">
+ <div class="jets"></div>
+ <div class="plate"><img class="m" src="assets/img/logo-mark.svg" alt=""><img class="w" src="assets/img/wordmark.svg" alt="QlsOS — Quick Light Secure OS"></div>
+ <h1 class="lp-h1">An operating system built on <em>capabilities</em>.</h1>
+ <p class="lead lp-sub">A small <b>capability microkernel</b> written from scratch: its own bootloader, kernel, drivers and shell. No third-party code.</p>
+ <div class="btns">
+  <a class="btn p" href="#start">Quick start</a>
+  <a class="btn" href="#download">Download</a>
+  <a class="btn" href="https://github.com/qlsdev/QlsOS">GitHub</a>
+ </div>
+ <div class="term"><div class="bar"><i></i><i></i><i></i></div><div class="b">
+  <div><span class="p">qlsos&gt;</span> help <span class="c"># topics</span></div>
+  <div><span class="p">qlsos&gt;</span> exec hello <span class="c"># ELF program in ring 3</span></div>
+  <div><span class="p">qlsos&gt;</span> dispatcher start <span class="c"># services as tasks</span></div>
+  <div><span class="p">qlsos&gt;</span> sh <span class="c"># shell in ring 3</span></div>
+ </div></div>
+</div>
+
+<div class="wrap"><div class="stats">
+ <div class="gl stat"><b>x86 + ARM</b><span>32-bit x86 · Cortex-A15</span></div>
+ <div class="gl stat"><b data-m="kib">≤ 83 KiB</b><span>kernel ceiling, target 64 KiB</span></div>
+ <div class="gl stat"><b>0</b><span>third-party libraries</span></div>
+ <div class="gl stat"><b>MPL-2.0</b><span>open source</span></div>
+</div></div>
+
+<section id="principles"><div class="wrap">
+ <h2>Principles</h2><p>Small, safe, quick to start programs, light enough for the weakest IoT devices.</p>
+ <div class="grid">
+  <div class="gl card"><h3>Channels and handles</h3><p>A handle is the only way to reach a kernel object. A task sees only what it was given; rights can only shrink, and a handle can be revoked or time-limited.</p></div>
+  <div class="gl card"><h3>No PIDs, no signals</h3><p>Programs start with <code>spawn</code>; the result arrives as one message. A task is stopped through its task handle. No <code>fork</code>, no <code>wait</code>.</p></div>
+  <div class="gl card"><h3>The system lives in userspace</h3><p>Dispatcher, console, keyboard and disk are ring-3 tasks. Even device access (ports, memory, IRQ) is a capability.</p></div>
+  <div class="gl card"><h3>64-bit clean, tested</h3><p>Every step is closed by a test (host-side under ASan/UBSan, or in QEMU). <code>make check64</code> guards the code for later ports.</p></div>
+ </div>
+</div></section>
+
+<section id="architecture"><div class="wrap">
+ <h2>Architecture</h2><p>The kernel keeps only memory, tasks, scheduling, interrupts, handles, channels and the loader. Everything else talks over channels.</p>
+ <div class="arch">
+  <div class="gl layer"><small>ring 3 · userspace</small><div class="row"><button class="chip" data-k="dispatcher">dispatcher</button><button class="chip" data-k="consoled">consoled</button><button class="chip" data-k="kbdd">kbdd</button><button class="chip" data-k="atad">atad</button><button class="chip" data-k="sh">sh</button><button class="chip" data-k="programs">programs</button></div></div>
+  <div class="chan">▲ channels &amp; handles ▼</div>
+  <div class="gl layer k"><small>ring 0 · kernel (common code)</small><div class="row"><button class="chip" data-k="memory">memory</button><button class="chip" data-k="tasks">tasks</button><button class="chip" data-k="handles">handles</button><button class="chip" data-k="channels">channels</button><button class="chip" data-k="ELF loader">ELF loader</button></div></div>
+  <div class="chan">▲ hal.h ▼</div>
+  <div class="gl layer"><small>ports</small><div class="row"><button class="chip" data-k="x86 (32-bit)">x86 (32-bit)</button><button class="chip" data-k="ARM (QEMU virt)">ARM (QEMU virt)</button><button class="chip" data-k="more after v1.0.0">more after v1.0.0</button></div></div>
+ </div>
+
+ <div class="gl detail" id="detail"><h3>Click any block</h3><p>See what it does and how it talks to the rest of the system.</p></div>
+ <div class="tools"><button class="btn" id="trace">▶ Trace a message</button><span id="tracetxt">sh → channel → consoled → screen</span></div>
+ </div></section>
+
+<section id="why"><div class="wrap">
+ <h2 data-ru="Почему QlsOS">Why QlsOS</h2>
+ <p data-ru="Идеи не новые, и мы этого не скрываем. Отличие — цель по размеру, код с нуля и упор на IoT.">The ideas are not new, and we say so. What differs is the size target, a from-scratch code base and an IoT-first focus.</p>
+ <div class="oscards"><article class="gl oc"><h3>Linux</h3><span class="bd" data-ru="Устоявшееся">Established</span><dl><div><dt data-ru="Ядро">Kernel</dt><dd data-ru="Монолитное">Monolithic</dd></div><div><dt data-ru="Модель доступа">Access model</dt><dd data-ru="Пользователи, файлы, биты прав">Users, files, permission bits</dd></div><div><dt data-ru="Драйверы">Drivers</dt><dd data-ru="В основном в ядре">Mostly in the kernel</dd></div><div><dt data-ru="Размер">Size</dt><dd data-ru="Большое, универсальное">Large, general purpose</dd></div></dl></article><article class="gl oc"><h3>seL4</h3><span class="bd" data-ru="Устоявшееся">Established</span><dl><div><dt data-ru="Ядро">Kernel</dt><dd data-ru="Микроядро">Microkernel</dd></div><div><dt data-ru="Модель доступа">Access model</dt><dd data-ru="Capabilities">Capabilities</dd></div><div><dt data-ru="Драйверы">Drivers</dt><dd data-ru="В userspace">In userspace</dd></div><div><dt data-ru="Размер">Size</dt><dd data-ru="Очень маленькое, формально проверено">Very small, formally verified</dd></div></dl></article><article class="gl oc"><h3>Zircon (Fuchsia)</h3><span class="bd" data-ru="Устоявшееся">Established</span><dl><div><dt data-ru="Ядро">Kernel</dt><dd data-ru="Микроядро">Microkernel</dd></div><div><dt data-ru="Модель доступа">Access model</dt><dd data-ru="Handles с правами">Handles with rights</dd></div><div><dt data-ru="Драйверы">Drivers</dt><dd data-ru="В userspace">In userspace</dd></div><div><dt data-ru="Размер">Size</dt><dd data-ru="Часть полной ОС">Part of a full OS</dd></div></dl></article><article class="gl oc me"><h3>QlsOS</h3><span class="bd" data-ru="Молодое · v0.x">Young · v0.x</span><dl><div><dt data-ru="Ядро">Kernel</dt><dd data-ru="Capability-микроядро">Capability microkernel</dd></div><div><dt data-ru="Модель доступа">Access model</dt><dd data-ru="Handles: права только сужаются, отзыв, срок жизни">Handles: rights only shrink, revocable, time-limited</dd></div><div><dt data-ru="Драйверы">Drivers</dt><dd data-ru="Консоль, клавиатура, диск в ring 3; пока есть запасной драйвер в ядре">Console, keyboard, disk in ring 3; kernel fallback for now</dd></div><div><dt data-ru="Размер">Size</dt><dd data-ru="Ядро ≤ 64 KiB к v1.0.0">Kernel ≤ 64 KiB for v1.0.0</dd></div></dl></article></div>
+ <div class="grid" style="margin-top:22px">
+  <div class="gl card"><h3 data-ru="Пока нет">Not there yet</h3><p data-ru="Нет сети, графики и SMP. v1.0.0 остаётся 32-битным x86.">No networking, no graphics, no SMP. v1.0.0 stays 32-bit x86.</p></div>
+  <div class="gl card"><h3 data-ru="Написано с нуля">Written from scratch</h3><p data-ru="Свой загрузчик, ядро, драйверы и шелл. Без чужого кода.">Own bootloader, kernel, drivers and shell. No third-party code.</p></div>
+  <div class="gl card"><h3 data-ru="Честно">Honest by design</h3><p data-ru="Каждый шаг закрыт тестом, а таблица железа показывает и то, что не заработало.">Every step is closed by a test, and the hardware table shows what did not work too.</p></div>
+ </div>
+</div></section>
+
+<section id="status"><div class="wrap">
+ <h2>Status</h2>
+ <p><span>Road to <b>v1.0.0</b>, six blocks.</span> <b id="stcount"></b></p>
+ <div class="pipe" id="steps"></div>
+</div></section>
+
+<section id="roadmap"><div class="wrap">
+ <h2 data-ru="Дорожная карта">Roadmap</h2>
+ <p><span data-ru="Цели 1–46 из списка задач и то, что после v1.0.0. Выполнено:" >Goals 1–46 from the task list, and what comes after v1.0.0. Done:</span> <b id="rcount"></b></p>
+ <div class="pg"><i id="rpg"></i></div>
+ <div class="fl" id="rf1"></div><div class="fl" id="rf2"></div>
+ <div class="rlist" id="rlist"></div>
+</div></section>
+
+<section id="metrics"><div class="wrap">
+ <h2>By the numbers</h2><p><span>Read from the source tree by <code>tools/gen_metrics.py</code>.</span> <span id="mupd"></span></p>
+ <div class="mgrid" id="mgrid"></div>
+ <div class="gl bar2"><b>Kernel size budget</b><div class="t"><i id="bnow"></i><u id="btgt"></u></div><small id="btxt">Ceiling now vs. the 64 KiB target for v1.0.0 (the ceiling is an upper bound checked by <code>make ksize</code>).</small></div>
+</div></section>
+
+<section id="hardware"><div class="wrap">
+ <h2 data-ru="Таблица железа">Hardware</h2>
+ <p data-ru="Что проверено на самом деле. Строки добавляются по чек-листу запуска на реальной машине.">What has actually been tested. Rows come from the real-machine checklist.</p>
+ <div class="hwcards" id="hwbody"></div>
+ <div class="grid" style="margin-top:22px">
+  <div class="gl card"><h3 data-ru="Нужен BIOS">Legacy BIOS only</h3><p data-ru="Загрузка через BIOS (int 0x13): нужен legacy BIOS или UEFI с CSM. Чистый UEFI не поддержан.">Boots through BIOS (int 0x13): needs legacy BIOS or UEFI with CSM. Pure UEFI is not supported.</p></div>
+  <div class="gl card"><h3 data-ru="Нет AHCI">No AHCI yet</h3><p data-ru="SATA-диск в режиме AHCI невидим; файлы сессии лежат в RAM.">A SATA disk in AHCI mode is invisible; session files live in RAM.</p></div>
+  <div class="gl card"><h3 data-ru="Только PS/2">PS/2 keyboard</h3><p data-ru="USB-клавиатура без PS/2-эмуляции в BIOS пока не даёт ввода.">A USB-only keyboard without BIOS PS/2 emulation gives no input yet.</p></div>
+  <div class="gl card"><h3 data-ru="64 МБ памяти">64 MB of RAM</h3><p data-ru="Менеджер физической памяти использует только первые 64 МБ.">The physical memory manager uses the first 64 MB only.</p></div>
+ </div>
+</div></section>
+
+<section id="start"><div class="wrap">
+ <h2>Quick start</h2><p>Linux or Windows + WSL. Needs <code>nasm</code>, <code>gcc -m32</code>, <code>make</code>, <code>qemu-system-i386</code>, <code>python3</code>.</p>
+ <div class="two">
+<pre data-copy="sudo apt install nasm build-essential gcc-multilib python3 qemu-system-x86
+git clone https://github.com/qlsdev/QlsOS && cd QlsOS
+make run"><span class="c"># build and run in QEMU</span>
+sudo apt install nasm build-essential \
+  gcc-multilib python3 qemu-system-x86
+git clone https://github.com/qlsdev/QlsOS
+cd QlsOS &amp;&amp; make run</pre>
+<pre data-copy="help
+exec hello
+dispatcher start
+sh"><span class="c"># first steps in the shell</span>
+help          <span class="c"># topics</span>
+exec hello    <span class="c"># ring-3 program</span>
+dispatcher start
+sh            <span class="c"># shell in ring 3</span></pre>
+ </div>
+</div></section>
+
+<section id="download"><div class="wrap">
+ <h2>Download</h2><p>QlsOS is built from source for now. Prebuilt images will appear in GitHub Releases.</p>
+ <div class="grid">
+  <div class="gl card"><h3>Build from source</h3><p>Clone the repository and run <code>make run</code>.</p></div>
+  <div class="gl card"><h3>USB stick image (usb.img)</h3><p>Legacy BIOS / CSM boot, PS/2 keyboard</p></div>
+  <div class="gl card"><h3>Prebuilt usb.img + SHA-256</h3><p>GitHub Releases, one file per tag</p></div>
+ </div>
+ <div class="btns" style="justify-content:flex-start"><a class="btn p" href="download/index.html">Open the download page</a></div>
+</div></section>
+
+<section id="docs"><div class="wrap">
+ <h2>Documentation</h2><p>Architecture contract, HAL design, hardware checklist and more, with search.</p>
+ <div class="grid"><a class="gl card" href="docs/readme.html"><small>README.md</small><h3>Overview</h3><p>What works today, quick start, limits.</p></a><a class="gl card" href="docs/contract.html"><small>ARCHITECTURE.md</small><h3>Architecture contract</h3><p>Handles, channels, spawn, goals and tests. Read this first.</p></a><a class="gl card" href="docs/hal-design.html"><small>docs/hal-design.md</small><h3>HAL design</h3><p>The contract between common code and ports.</p></a><a class="gl card" href="docs/hardware-checklist.html"><small>docs/hardware-checklist.md</small><h3>Hardware checklist</h3><p>Running on a real PC.</p></a></div>
+ <div class="btns" style="justify-content:flex-start"><a class="btn p" href="docs/index.html">All documents</a></div>
+</div></section>
+
+<section id="contribute"><div class="wrap">
+ <h2 data-ru="Участвовать">Contribute</h2>
+ <p data-ru="Код открыт по MPL-2.0. Баг-репорты, результаты на железе и ревью — всё приветствуется.">The code is open under MPL-2.0. Bug reports, hardware results and reviews are all welcome.</p>
+ <div class="grid">
+  <div class="gl card"><h3 data-ru="Запустите тесты">Run the tests</h3><p data-ru="Перед правкой: make test и make check64.">Before a change: <code>make test</code> and <code>make check64</code>.</p></div>
+  <div class="gl card"><h3 data-ru="Проверьте свою машину">Test your machine</h3><p data-ru="Пройдите чек-лист железа и откройте issue со своей строкой результата.">Follow the hardware checklist and open an issue with your result row.</p></div>
+  <div class="gl card"><h3 data-ru="Прочтите контракт">Read the contract</h3><p data-ru="ARCHITECTURE.md описывает правила, которые не гнутся.">ARCHITECTURE.md lists the rules that never bend.</p></div>
+  <div class="gl card"><h3 data-ru="Лицензия">License</h3><p data-ru="Mozilla Public License 2.0: правки файлов остаются открытыми.">Mozilla Public License 2.0: changes to the files stay open.</p></div>
+ </div>
+ <h3 class="sub" data-ru="Недавно закрыто">Recently completed</h3>
+ <ul class="devlog" id="devlog"></ul>
+ <div class="btns" style="justify-content:flex-start"><a class="btn p" href="https://github.com/qlsdev/QlsOS/issues" data-ru="Открыть issue">Open an issue</a><a class="btn" href="https://github.com/qlsdev/QlsOS" data-ru="Смотреть на GitHub">View on GitHub</a></div>
+</div></section>
+
+<section id="repo"><div class="wrap">
+ <h2>Repository</h2><p>Docs: <a href="https://github.com/qlsdev/QlsOS/blob/HEAD/ARCHITECTURE.md">ARCHITECTURE</a> · <a href="https://github.com/qlsdev/QlsOS/blob/HEAD/PROJECT.md">PROJECT</a> · <a href="https://github.com/qlsdev/QlsOS/blob/HEAD/docs/hal-design.md">HAL design</a> · <a href="https://github.com/qlsdev/QlsOS/blob/HEAD/docs/hardware-checklist.md">Hardware checklist</a></p>
+<pre>boot/             x86 bootloader (two stages, CRC-32 check)
+kernel/src/       common code: scheduler, handles, channels, heap, VFS
+kernel/hal/       hal.h — contract between common code and ports
+kernel/arch/x86/  everything x86-specific
+kernel/arch/arm/  everything ARM-specific
+user/             ring 3: dispatcher, services, shell, tests
+tests/            host tests + QEMU harness
+tools/            crc32, usb-write.sh</pre>
+</div></section>
+</main>
+
+<footer><div class="wrap"><span>© QlsOS · <a href="https://github.com/qlsdev/QlsOS#MPL-2.0-1-ov-file">MPL-2.0</a></span><span><a href="https://github.com/qlsdev/QlsOS">Source on GitHub ↗</a></span></div></footer>
+</body>
+</html>

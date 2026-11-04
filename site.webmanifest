@@ -1,0 +1,15 @@
+{
+ "name": "QlsOS",
+ "short_name": "QlsOS",
+ "start_url": "./",
+ "display": "standalone",
+ "background_color": "#04060b",
+ "theme_color": "#04060b",
+ "icons": [
+  {
+   "src": "assets/img/apple-touch-icon.png",
+   "sizes": "180x180",
+   "type": "image/png"
+  }
+ ]
+}
