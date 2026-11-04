@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Download — QlsOS</title>
+<meta name="description" content="QlsOS: a small capability microkernel written from scratch. Own bootloader, kernel, drivers and shell. x86 and ARM.">
+<meta name="theme-color" content="#000000">
+<meta property="og:title" content="QlsOS — Quick Light Secure OS">
+<meta property="og:description" content="A small capability microkernel written from scratch.">
+<link rel="canonical" href="https://qlsos.github.io/download/"><meta property="og:image" content="https://qlsos.github.io/assets/img/og.png"><meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg">
+<link rel="stylesheet" href="../assets/lasurpixel/lasurpixel.css"><link rel="stylesheet" href="../assets/css/style.css">
+<script src="../assets/lasurpixel/lasurpixel.js"></script>
+<script src="../assets/js/i18n.js" defer></script>
+<script src="../assets/js/main.js" defer></script>
+</head>
+<body>
+<div class="bg"><i></i><i></i><i></i></div>
+<header class="gl"><div class="wrap">
+ <a class="brand" href="../index.html#top"><img src="../assets/img/logo-mark.svg" alt=""><span class="bn">Qls<b>OS</b></span></a>
+ <button id="menu" class="lp-ib" aria-label="Menu">☰</button>
+ <nav>
+  <a href="../index.html#principles">Principles</a><a href="../index.html#architecture">Architecture</a><a href="../index.html#why" data-ru="Почему">Why QlsOS</a><a href="../index.html#roadmap" data-ru="Карта">Roadmap</a><a href="../index.html#hardware" data-ru="Железо">Hardware</a><a href="../index.html#start" data-ru="Старт">Quick start</a><a class="on" href="index.html">Download</a><a href="../index.html#docs" data-ru="Документы">Docs</a><a href="../index.html#contribute" data-ru="Вклад">Contribute</a>
+ </nav>
+ <div class="tl"><a class="lp-ib w" href="https://github.com/qlsdev/QlsOS">GitHub ↗</a><button id="lang" class="lp-ib w" aria-label="Language">RU</button><button id="theme" class="lp-ib" aria-label="Theme">◐</button></div>
+</div></header>
+
+<main><div class="wrap page"><h1>Download</h1><p style="color:var(--dim);font-size:19px;max-width:700px">QlsOS is built from source for now. Prebuilt images will appear in GitHub Releases.</p>
+<div class="dl">
+ <div class="gl step done"><em>1</em><div><b>Build from source</b><small>Needs nasm, gcc -m32, make, qemu-system-i386, python3</small></div><span>available</span>
+  <pre style="width:100%;margin-top:10px" data-copy="git clone https://github.com/qlsdev/QlsOS
+cd QlsOS
+make run">git clone https://github.com/qlsdev/QlsOS
+cd QlsOS
+make run   <span class="c"># QEMU window</span></pre></div>
+ <div class="gl step done"><em>2</em><div><b>USB stick image (usb.img)</b><small>Legacy BIOS / CSM boot, PS/2 keyboard</small></div><span>available</span>
+  <pre style="width:100%;margin-top:10px" data-copy="make usb.img
+make usb-write DEV=/dev/sdX
+sha256sum usb.img">make usb.img
+make usb-write DEV=/dev/sdX   <span class="c"># safe writer</span>
+sha256sum usb.img             <span class="c"># compare with the Release notes</span></pre></div>
+ <div class="gl step now"><em>3</em><div><b>Prebuilt usb.img + SHA-256</b><small>GitHub Releases, one file per tag</small></div><span>soon</span></div>
+ <div class="gl step"><em>4</em><div><b>ISO with installer</b><small>Block F of the plan, together with v1.0.0</small></div><span>planned</span></div>
+</div>
+<div class="gl warn"><b>Careful:</b> <code>usb-write</code> erases the target device. Check <code>DEV</code> twice. Before a real PC, read the <a href="https://github.com/qlsdev/QlsOS/blob/HEAD/docs/hardware-checklist.md">hardware checklist</a>.</div>
+</div></main>
+<footer class="gl"><div class="wrap"><span>© QlsOS · MPL-2.0</span><span><a href="https://github.com/qlsdev/QlsOS/releases">Releases ↗</a></span></div></footer>
+</body></html>

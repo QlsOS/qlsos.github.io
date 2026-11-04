@@ -1,0 +1,55 @@
+<svg width="544" height="224" viewBox="-11 -8 272 112" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <!-- Общий стиль: толщина 8, острые углы, без скруглений — строгий и технический -->
+            <path id="g-C" d="M46,13 A24,26 0 1 0 46,47"/>
+            <path id="g-E" d="M36,4 H4 V56 H36 M4,30 H30"/>
+            <path id="g-G" d="M46,13 A24,26 0 1 0 52,30 H30"/>
+            <path id="g-H" d="M4,0 V60 M4,30 H36 M36,0 V60"/>
+            <path id="g-I" d="M4,0 V60"/>
+            <path id="g-K" d="M4,0 V60 M36,0 L4,36 M14,26 L38,60"/>
+            <path id="g-L" d="M4,0 V56 H34"/>
+            <ellipse id="g-O" cx="28" cy="30" rx="24" ry="26"/>
+            <g id="g-Q"><ellipse cx="28" cy="30" rx="24" ry="26"/><line x1="32" y1="38" x2="56" y2="66" stroke="#00A3FF" stroke-width="4"/></g>
+            <path id="g-R" d="M4,0 V60 M4,4 H24 A14,14 0 0 1 24,32 H4 M20,32 L38,60"/>
+            <path id="g-S" d="M30,17 A13,13 0 1 0 17,30 A13,13 0 1 1 4,43"/>
+            <path id="g-T" d="M-2,4 H42 M20,4 V60"/>
+            <path id="g-U" d="M4,0 V40 A16,16 0 0 0 36,40 V0"/>
+            <path id="g-W" d="M36,17 A18,13 0 1 0 18,30 A18,13 0 1 1 0,43"/>
+            <path id="g-l" d="M4,0 V42 A14,14 0 0 0 18,56 H26"/>
+            <path id="g-s" d="M26,26 A10,10 0 1 0 16,36 A10,10 0 1 1 6,46"/>
+            <style>
+                use { fill: none; stroke: #FFF; stroke-width: 8; stroke-linejoin: miter; stroke-linecap: butt; }
+            </style>
+        </defs>
+
+        <!-- QlsOS -->
+        <g>
+            <use href="#g-Q" x="0.0"/>
+            <use href="#g-l" x="74.0"/>
+            <use href="#g-s" x="104.0"/>
+            <use href="#g-O" x="146.0" style="stroke:#00A3FF"/>
+            <use href="#g-W" x="210.0" style="stroke:#00A3FF"/>
+        </g>
+
+        <!-- QUICK LIGHT SECURE OS -->
+        <g transform="translate(0,84) scale(0.2244)" opacity="0.9">
+            <use href="#g-Q" x="0.0" style="stroke:#00A3FF"/>
+            <use href="#g-U" x="72.0" style="stroke:#00A3FF"/>
+            <use href="#g-I" x="128.0" style="stroke:#00A3FF"/>
+            <use href="#g-C" x="152.0" style="stroke:#00A3FF"/>
+            <use href="#g-K" x="218.0" style="stroke:#00A3FF"/>
+            <use href="#g-L" x="316.0" style="stroke:#00A3FF"/>
+            <use href="#g-I" x="370.0" style="stroke:#00A3FF"/>
+            <use href="#g-G" x="394.0" style="stroke:#00A3FF"/>
+            <use href="#g-H" x="466.0" style="stroke:#00A3FF"/>
+            <use href="#g-T" x="526.0" style="stroke:#00A3FF"/>
+            <use href="#g-S" x="626.0" style="stroke:#00A3FF"/>
+            <use href="#g-E" x="676.0" style="stroke:#00A3FF"/>
+            <use href="#g-C" x="732.0" style="stroke:#00A3FF"/>
+            <use href="#g-U" x="798.0" style="stroke:#00A3FF"/>
+            <use href="#g-R" x="854.0" style="stroke:#00A3FF"/>
+            <use href="#g-E" x="912.0" style="stroke:#00A3FF"/>
+            <use href="#g-O" x="1008.0" style="stroke:#00A3FF"/>
+            <use href="#g-S" x="1080.0" style="stroke:#00A3FF"/>
+        </g>
+    </svg>

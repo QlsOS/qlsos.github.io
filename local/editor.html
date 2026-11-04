@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>QlsOS — локальный редактор цифр</title>
+<link rel="stylesheet" href="../assets/lasurpixel/lasurpixel.css">
+<script src="../assets/lasurpixel/lasurpixel.js"></script>
+<style>
+body{padding-top:0!important}.w{max-width:960px;margin:0 auto;padding:40px 22px 80px}h1{font-size:34px;font-weight:800;letter-spacing:-.04em}
+.pn{border-radius:30px;padding:28px;margin-top:18px}.pn h2{font-size:20px;margin:0 0 14px;letter-spacing:-.02em}.pn p{color:var(--dim);margin:0 0 14px}
+.f{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}label{display:grid;gap:6px;font-size:13px;color:var(--dim);font-weight:600}
+input{font:500 15px var(--font);color:var(--fg);background:var(--glass2);border:0;border-radius:14px;padding:11px 14px;box-shadow:inset 0 0 0 1px var(--bd);outline:0;width:100%}input:focus{box-shadow:inset 0 0 0 1.5px var(--ac)}
+.hw{display:grid;gap:10px;margin-bottom:12px}.hr{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:14px;border-radius:20px;background:var(--glassA);box-shadow:inset 0 0 0 1px var(--bd)}.hr .s2{grid-column:span 2}.hr .x{align-self:end}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}#msg{color:var(--ac2);font-weight:600}#msg.e{color:#fbbf24}.big{font:800 40px var(--font);letter-spacing:-.04em}
+</style></head><body><div class="bg"><i></i><i></i><i></i></div>
+<div class="w">
+ <h1>Редактор цифр сайта</h1>
+ <p class="lp-sub">Этот файл лежит в <code>local/</code>, который не попадает в git (см. <code>.gitignore</code>). Он меняет файлы в <code>data/</code>, сайт сам подхватывает цифры.</p>
+ <div class="pn gl"><div class="row"><button class="btn p" id="pick">Выбрать папку сайта</button><label style="display:inline-grid">или выбрать три файла вручную <input type="file" id="files" multiple accept=".json"></label><span id="msg"></span></div>
+  <p style="margin:12px 0 0">Папка сайта — та, где лежит <code>index.html</code>. Нужен Chrome, Edge или другой браузер с File System Access API; иначе файлы скачаются, и их надо положить в <code>data/</code> самому.</p></div>
+ <div id="app" hidden>
+  <div class="pn gl"><h2>Задачи</h2><p>Блоки A–F, прогресс-бары, лента «Недавно закрыто» и дорожная карта считаются сами из этих двух чисел.</p>
+   <div class="f"><label>Сделано целей (до N включительно)<input id="done" type="number" min="0"></label><label>Сейчас в работе (№ цели)<input id="current" type="number" min="0"></label><div><div class="big" id="pct"></div><span class="lp-sub" id="tot"></span></div></div></div>
+  <div class="pn gl"><h2>Цифры проекта</h2><p>Потолок ядра в байтах, число тестов и строк кода. Скрипт <code>tools/gen_metrics.py</code> тоже пишет сюда, а здесь можно поправить руками.</p>
+   <div class="f" id="mf"></div></div>
+  <div class="pn gl"><h2>Таблица железа</h2><div class="hw" id="hw"></div><button class="btn" id="addhw">+ Добавить машину</button></div>
+  <div class="row" style="margin-top:22px"><button class="btn p" id="save">Сохранить</button><span class="lp-sub">Записывает .json и .js в data/</span></div>
+ </div></div>
+<script>
+const $=s=>document.querySelector(s);let dir=null,RM,MT,ST;
+const MK=[['kernel_budget_now','Потолок ядра сейчас, байт'],['kernel_budget_v1','Цель v1.0.0, байт'],['test_targets','Целей make test'],['host_tests','Host-тестов'],['kernel_loc','Строк в kernel/'],['user_loc','Строк в user/'],['tests_loc','Строк в tests/']];
+const msg=(t,e)=>{const m=$('#msg');m.textContent=t;m.className=e?'e':''};
+async function fh(p,c){const a=p.split('/'),n=a.pop();let d=dir;for(const x of a)d=await d.getDirectoryHandle(x,{create:c});return d.getFileHandle(n,{create:c})}
+const rd=async p=>JSON.parse(await(await(await fh(p)).getFile()).text());
+const wr=async(p,t)=>{const w=await(await fh(p,true)).createWritable();await w.write(t);await w.close()};
+function render(){
+ $('#done').value=RM.done;$('#current').value=RM.current;$('#tot').textContent='из '+RM.total+' целей';pct();
+ $('#mf').innerHTML=MK.map(([k,l])=>'<label>'+l+'<input data-m="'+k+'" type="number" value="'+(MT[k]??'')+'"></label>').join('');
+ $('#hw').innerHTML=ST.hardware.map((r,i)=>'<div class="hr" data-i="'+i+'">'+
+  [['name','Машина'],['boot','Загрузка'],['kb','Клавиатура'],['disk','Диск виден'],['rb','Reboot / выкл.'],['sub_en','Описание EN','s2'],['sub_ru','Описание RU','s2'],['notes_en','Заметки EN','s2'],['notes_ru','Заметки RU','s2']].map(([k,l,c])=>'<label class="'+(c||'')+'">'+l+'<input data-k="'+k+'" value="'+String(r[k]??'').replace(/"/g,'&quot;')+'"></label>').join('')+
+  '<button class="btn x" data-del="'+i+'">Удалить</button></div>').join('');
+ document.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{collect();ST.hardware.splice(+b.dataset.del,1);render()})}
+const pct=()=>{const d=+$('#done').value||0;$('#pct').textContent=Math.round(d/RM.total*100)+'%'};
+$('#done').oninput=pct;
+function collect(){RM.done=+$('#done').value||0;RM.current=+$('#current').value||0;
+ document.querySelectorAll('[data-m]').forEach(i=>{const v=i.value===''?null:+i.value;MT[i.dataset.m]=v});
+ ST.hardware=[...document.querySelectorAll('.hr')].map(r=>{const o={};r.querySelectorAll('[data-k]').forEach(i=>o[i.dataset.k]=i.value);return o})}
+$('#addhw').onclick=()=>{collect();ST.hardware.push({name:'New machine',boot:'ok',kb:'ok',disk:'—',rb:'ok / ok',sub_en:'',sub_ru:'',notes_en:'',notes_ru:''});render()};
+const dl=(n,t)=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/plain'}));a.download=n;a.click()};
+$('#save').onclick=async()=>{collect();MT.updated=RM.updated=new Date().toISOString().slice(0,10);
+ const F=[['roadmap',RM,'QLS_ROADMAP'],['metrics',MT,'QLS_METRICS'],['site',ST,'QLS_SITE']];
+ try{for(const [n,o,g] of F){const j=JSON.stringify(o,null,1),s='window.'+g+'='+JSON.stringify(o)+';\n';
+   if(dir){await wr('data/'+n+'.json',j);await wr('data/'+n+'.js',s)}else{dl(n+'.json',j);dl(n+'.js',s)}}
+  msg(dir?'Сохранено в data/. Обнови страницу сайта (Ctrl+F5).':'Файлы скачаны: положи их в data/.')}catch(e){msg('Ошибка записи: '+e.message,1)}};
+$('#pick').onclick=async()=>{if(!window.showDirectoryPicker){msg('Этот браузер не умеет писать в папку — выбери файлы вручную справа.',1);return}
+ try{dir=await showDirectoryPicker({mode:'readwrite'});[RM,MT,ST]=await Promise.all([rd('data/roadmap.json'),rd('data/metrics.json'),rd('data/site.json')]);render();$('#app').hidden=false;msg('Открыта папка '+dir.name)}catch(e){msg('Не получилось открыть: '+e.message,1)}};
+$('#files').onchange=async e=>{const o={};for(const f of e.target.files)o[f.name]=JSON.parse(await f.text());
+ if(o['roadmap.json']&&o['metrics.json']&&o['site.json']){dir=null;RM=o['roadmap.json'];MT=o['metrics.json'];ST=o['site.json'];render();$('#app').hidden=false;msg('Файлы загружены')}else msg('Нужны сразу roadmap.json, metrics.json и site.json',1)};
+</script></body></html>

@@ -1,0 +1,14 @@
+<svg viewBox="-60 -60 120 120" xmlns="http://www.w3.org/2000/svg">
+        <rect x="-60" y="-60" width="120" height="120" fill="#000"/><defs>
+            <mask id="disk-hole">
+                <rect x="-60" y="-60" width="120" height="120" fill="#FFF" />
+                <ellipse cx="0" cy="0" rx="9" ry="2.9" fill="#000" />
+            </mask>
+        </defs>
+        <g transform="rotate(35)">
+            <polygon points="0,2 1.2,2 0,55 -1.2,2" fill="#00A3FF" />
+            <ellipse cx="0" cy="0" rx="46" ry="15" fill="#FFF" mask="url(#disk-hole)" />
+            <ellipse cx="0" cy="0" rx="5" ry="1.6" fill="#FFF" />
+            <polygon points="0,-55 1.5,-1 0,0 -1.5,-1" fill="#00A3FF" />
+        </g>
+    </svg>
