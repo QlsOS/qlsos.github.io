@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Overview — QlsOS</title>
+<meta name="description" content="QlsOS documentation: Overview"><link rel="canonical" href="https://qlsos.github.io/docs/readme.html"><meta property="og:image" content="https://qlsos.github.io/assets/img/og.png">
+<link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg"><link rel="stylesheet" href="../assets/lasurpixel/lasurpixel.css"><link rel="stylesheet" href="../assets/css/style.css"><script src="../assets/lasurpixel/lasurpixel.js"></script>
+<script src="../data/docs-ru.js"></script><script>(function(){try{var l=localStorage.getItem('l')}catch(e){}l=l||((navigator.language||'').toLowerCase().indexOf('ru')==0?'ru':'en');var m=location.pathname.match(/\/docs\/(ru\/)?([a-z-]+)\.html$/);if(!m)return;var r=!!m[1],s=m[2],a=window.QLS_RU_DOCS||[];if(l==='ru'&&!r&&a.indexOf(s)>-1)location.replace('ru/'+s+'.html'+location.hash);else if(l!=='ru'&&r)location.replace('../'+s+'.html'+location.hash)})();</script>
+<script src="search.js"></script><script src="../assets/js/i18n.js" defer></script><script src="../assets/js/main.js" defer></script></head>
+<body><div class="bg"><i></i><i></i><i></i></div><header class="gl"><div class="wrap">
+ <a class="brand" href="../index.html#top"><img src="../assets/img/logo-mark.svg" alt=""><span class="bn">Qls<b>OS</b></span></a>
+ <button id="menu" class="lp-ib" aria-label="Menu">☰</button>
+ <nav>
+  <a href="../index.html#principles">Principles</a><a href="../index.html#architecture">Architecture</a><a href="../index.html#why" data-ru="Почему">Why QlsOS</a><a href="../index.html#roadmap" data-ru="Карта">Roadmap</a><a href="../index.html#hardware" data-ru="Железо">Hardware</a><a href="../index.html#start" data-ru="Старт">Quick start</a><a href="../index.html#download">Download</a><a class="on" href="index.html" data-ru="Документы">Docs</a><a href="../index.html#contribute" data-ru="Вклад">Contribute</a>
+ </nav>
+ <div class="tl"><a class="lp-ib w" href="https://github.com/qlsdev/QlsOS">GitHub ↗</a><button id="lang" class="lp-ib w" aria-label="Language">RU</button><button id="theme" class="lp-ib" aria-label="Theme">◐</button></div>
+</div></header>
+<main><div class="wrap dgrid"><aside class="side gl"><input id="dq" type="search" placeholder="Search docs…" autocomplete="off"><div id="dres"></div><nav class="dn"><a class="on" href="readme.html">Overview</a><div class="toc"><a href="#design-in-short">Design in short</a><a href="#what-works-today">What works today</a><a href="#requirements">Requirements</a><a href="#quick-start">Quick start</a><a href="#first-steps-in-the-shell">First steps in the shell</a><a href="#repository-layout">Repository layout</a><a href="#limits-to-know-about">Limits to know about</a><a href="#license">License</a></div><a class="" href="project.html">Project</a><a class="" href="contract.html">Architecture contract</a><a class="" href="code-layout.html">Code layout</a><a class="" href="hal-design.html">HAL design</a><a class="" href="elf-loader.html">ELF loader</a><a class="" href="hardware-checklist.html">Hardware checklist</a><a class="" href="history.html">History</a></nav></aside><article class="doc gl"><h1 id="qlsos-quick-light-secure-os">QlsOS (Quick Light Secure OS)</h1>
+<p><strong>QlsOS</strong> (<em>Quick Light Secure OS</em>) is a small <strong>capability microkernel</strong> written from scratch: its own bootloader, kernel, drivers and shell, no third-party libraries. The kernel is fully its own (Linux/WSL is only used as the build tool). Runs on <strong>x86 (32-bit)</strong> and <strong>ARM (Cortex-A15, QEMU <code>virt</code>)</strong>; the x86 port boots in QEMU and has a bootloader prepared for real PCs (BIOS, USB stick). Target of the first release: <strong>v1.0.0</strong>.</p>
+<p>Design goals: <strong>small</strong> (kernel code under 64 KiB for v1.0.0), <strong>safe</strong> (a task touches only what it holds a handle to), <strong>fast to start programs</strong>, and light enough for the weakest IoT devices.</p>
+<blockquote>Project summary and status: <a href="project.html"><code>PROJECT.md</code></a> · Architecture contract: <a href="contract.html"><code>ARCHITECTURE.md</code></a> · Code layout: <a href="code-layout.html"><code>docs/architecture.md</code></a></blockquote>
+<h2 id="design-in-short">Design in short</h2>
+<ul><li><strong>Everything goes through channels and handles.</strong> A handle is the only way a task refers to a kernel object. A task sees only the handles it was given; rights can only be narrowed, never widened; a handle can be revoked or given a time limit.</li><li><strong>No PIDs, no signals, no <code>fork</code>/<code>wait</code>.</strong> A program is started with <code>spawn</code>; how it ended arrives as one message on a result channel; a task is stopped or killed through a task handle.</li><li><strong>The system lives in userspace.</strong> A ring-3 <em>System Dispatcher</em> starts services and hands channels to clients; the console (VGA) and the keyboard are ring-3 driver tasks; the shell exists as a ring-3 program (<code>sh</code>) too. The in-kernel shell stays as the test and fallback shell. Device access is itself a capability (memory regions, I/O ports, interrupt lines as handles).</li><li><strong>Code is 64-bit clean</strong> (<code>uintptr_t</code>, <code>size_t</code>, fixed-width types, enforced by <code>make check64</code>); a 64-bit port and other platforms come after v1.0.0 through the HAL.</li><li><strong>Every step is closed by a test</strong> (host-side under ASan/UBSan and/or in QEMU).</li></ul>
+<h2 id="what-works-today">What works today</h2>
+<ul><li><strong>x86:</strong> own two-stage bootloader (reads the BIOS memory map, uses LBA or CHS as the BIOS allows, <strong>CRC-32 check of the kernel before the jump</strong>), protected mode, paging, physical memory manager, heap, preemptive round-robin scheduler, ring-3 tasks with their own page directories, <code>int 0x80</code> syscalls, PS/2 keyboard and mouse, VGA text console with scrollback, ATA/IDE, RTC, PCI, ACPI reboot/shutdown.</li><li><strong>Tasks:</strong> ELF32 loader, <code>spawn</code> from ring 3 (the new task holds exactly the handles it is given), result channel, task control handle (stop / resume / kill), per-task limits (memory frames, handles), clean fault handling (a crash kills only that task), blocking <code>sleep</code> and blocking channel calls (no polling, no CPU while waiting).</li><li><strong>Handles and channels:</strong> handle table per task, channels with bounded queues (64-byte messages), handles passed in messages (same or fewer rights), <code>revoke</code> and handle time limits, exact freeing of every object (checked by tests), <code>caps</code> to see who holds what.</li><li><strong>Userspace system:</strong> System Dispatcher with supervised services, console service (<code>consoled</code>) and keyboard service (<code>kbdd</code>) as ring-3 drivers with automatic fallback to the kernel driver, ring-3 shell <code>sh</code> with <code>run prog [args] [--grant name[:rights]]</code>.</li><li><strong>Storage:</strong> VFS layer, RAM disk, initrd and <strong>QlsFS</strong> (flat file system on the ATA disk).</li><li><strong>Real hardware preparation:</strong> USB-bootable image (<code>make usb.img</code>, safe writer <code>make usb-write</code>), a memory map that tolerates real BIOSes, no hangs on machines without a COM port, ACPI tables above 256 MB reachable (tested with 32 MB ... 3.5 GB of RAM in QEMU).</li><li><strong>ARM:</strong> UART shell, GICv2, generic timer, PSCI reset/off, multitasking (no paging/ring 3 yet).</li></ul>
+<p>Kernel size today: about 77 KB of code (<code>make ksize</code>); the target for v1.0.0 is 64 KiB, reached when the shell, the old drivers and the in-kernel tests leave ring 0.</p>
+<h2 id="requirements">Requirements</h2>
+<ul><li>Linux or <strong>Windows + WSL</strong></li><li><code>nasm</code>, <code>gcc</code> (with <code>-m32</code> support), <code>binutils</code>, <code>make</code>, <code>qemu-system-i386</code>, <code>python3</code> (the QEMU test harness)</li><li>ARM port only: <code>gcc-arm-none-eabi</code>, <code>qemu-system-arm</code></li></ul>
+<pre><code>sudo apt install nasm build-essential gcc-multilib python3 qemu-system-x86
+sudo apt install gcc-arm-none-eabi binutils-arm-none-eabi qemu-system-arm   # ARM only</code></pre>
+<h2 id="quick-start">Quick start</h2>
+<p><strong>Windows</strong></p>
+<div class="tw"><table><thead><tr><th>Situation</th><th>Run</th></tr></thead><tbody><tr><td>WSL2 works (WSLg shows the QEMU window)</td><td><code>run.bat</code> (ARM: <code>run.bat arm</code>)</td></tr><tr><td>Only WSL1 (no "Virtual Machine Platform")</td><td><code>run_wsl1.bat</code> — builds in WSL1, runs QEMU for Windows</td></tr></tbody></table></div>
+<p>Logs go to the <code>logs/</code> folder next to the scripts (<code>last-build.log</code>, <code>last-errors.log</code>, <code>last-qemu.log</code>, ...).</p>
+<p><strong>Linux / inside WSL</strong></p>
+<pre><code>make                # build disk.img (+ disk_data.img on first run)
+make run            # QEMU with a window
+make run-headless   # QEMU without a window, serial log in the console
+make arm            # build the ARM kernel
+make run-arm        # run it in qemu-system-arm -M virt (UART in the terminal)
+make usb.img        # image for a USB stick (BIOS/CSM boot); make usb-write DEV=/dev/sdX writes it safely
+make clean</code></pre>
+<p><strong>Checks</strong></p>
+<pre><code>make check64             # shared code must be 64-bit clean
+make ksize               # kernel size against the budget
+make test                # ELF loader and user stack on the host (ASan/UBSan, no QEMU)
+make test-handle-host  test-channel-host  test-task-host  test-revoke-host  test-caps-host  ...   # the kernel logic on the host
+make test-spawn  test-result  test-ctl  test-dispatcher  test-sh  test-run  test-caps  ...        # in QEMU (each one also runs the earlier self-tests)
+make test-boot  test-usbimg  test-hw  test-mmap  test-crc32                                       # bootloader, images, odd machines</code></pre>
+<p>The full list of targets is in the <code>Makefile</code>; what each test checks is written in <a href="contract.html"><code>ARCHITECTURE.md</code></a>.</p>
+<h2 id="first-steps-in-the-shell">First steps in the shell</h2>
+<pre><code>help                  list of help topics        help all   everything
+ps                    tasks (state, CPU ticks)   caps [N]   who holds which handles and where each came from
+exec hello            run a program (ELF) in ring 3; the shell waits for its result
+bg spin               run in the background      jobs  stop %N  cont %N  kill %N   (through the task handle)
+sh                    the shell in ring 3 (it has the screen and the keyboard until `exit`)
+                      inside it:  run hello   run prog [args] --grant name:rights
+dispatcher start      start the System Dispatcher and its services      (list | ping &lt;i&gt; &lt;text&gt; | kill &lt;i&gt; | ...)
+console  kbd          the screen / the keyboard are the services&#x27;  (on | off | kill; kbd also status)
+faulttest  sleeptest  blocktest  handletest  channeltest  spawntest  resulttest  ctltest  ...   self-tests (help tests)
+bench                 boot/spawn baseline, written to baseline.txt
+write note hello      create a file on QlsFS     cat note       print it</code></pre>
+<p><code>exec</code> programs available out of the box: <code>hello</code>, <code>crash</code>, <code>sleeper</code>, <code>nop</code>, <code>spin</code>. Full command list: <code>help all</code>.</p>
+<h2 id="repository-layout">Repository layout</h2>
+<pre><code>boot/               x86 bootloader (two stages)
+kernel/src/         arch-independent code (shell, scheduler, handles, channels, heap, VFS, QlsFS, ...)
+kernel/include/     arch-independent headers
+kernel/hal/hal.h    the HAL contract between common code and the architectures
+kernel/arch/x86/    everything x86-specific (drivers, paging, ring 3, syscalls, ELF loader, in-kernel self-tests)
+kernel/arch/arm/    everything ARM-specific
+user/               ring-3 programs (C, static ELF): dispatcher, services, drivers, shell, tests + crt0 + linker script + usys.h
+tests/              host-side tests (ASan/UBSan) and the QEMU test harness
+tools/              crc32 (image check), usb-write.sh (safe image writer)
+ARCHITECTURE.md     the architecture contract of the capability microkernel
+docs/               architecture.md, hal-design.md, elf-loader.md, hardware-checklist.md, history.md</code></pre>
+<h2 id="limits-to-know-about">Limits to know about</h2>
+<ul><li>The bootloader loads a kernel of at most <strong>512 KiB</strong> (<code>make</code> fails loudly above that) and refuses a kernel whose CRC-32 does not match.</li><li>QlsFS is flat: up to 64 files, names up to 23 characters; <code>rm</code> does not reclaim disk space.</li><li>ARM has no paging, PMM, ring 3 or syscalls yet.</li><li>The x86 shell reads the PS/2 keyboard: a PC whose only keyboard is USB without BIOS PS/2 emulation has no input yet.</li><li>The physical memory manager manages the first 64 MB.</li><li>If QEMU "stops working" after several launches, a previous QEMU is probably still holding <code>disk.img</code> — see the troubleshooting section in <a href="history.html"><code>docs/history.md</code></a> (<code>wsl --shutdown</code> from Windows fixes it).</li></ul>
+<h2 id="license">License</h2>
+<p><a href="https://github.com/qlsdev/QlsOS#MPL-2.0-1-ov-file">MPL-2.0</a> (Mozilla Public License 2.0).</p><p class="src">Source: <a href="https://github.com/qlsdev/QlsOS/blob/HEAD/README.md">README.md</a></p></article></div></main>
+<footer class="gl"><div class="wrap"><span>© QlsOS · MPL-2.0</span><span><a href="https://github.com/qlsdev/QlsOS">GitHub ↗</a></span></div></footer></body></html>

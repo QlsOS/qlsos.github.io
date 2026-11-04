@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Обзор — QlsOS</title>
+<meta name="description" content="QlsOS documentation: Обзор"><link rel="canonical" href="https://qlsos.github.io/docs/ru/readme.html"><meta property="og:image" content="https://qlsos.github.io/assets/img/og.png">
+<link rel="icon" type="image/svg+xml" href="../../assets/img/favicon.svg"><link rel="stylesheet" href="../../assets/lasurpixel/lasurpixel.css"><link rel="stylesheet" href="../../assets/css/style.css"><script src="../../assets/lasurpixel/lasurpixel.js"></script>
+<script src="../../data/docs-ru.js"></script><script>(function(){try{var l=localStorage.getItem('l')}catch(e){}l=l||((navigator.language||'').toLowerCase().indexOf('ru')==0?'ru':'en');var m=location.pathname.match(/\/docs\/(ru\/)?([a-z-]+)\.html$/);if(!m)return;var r=!!m[1],s=m[2],a=window.QLS_RU_DOCS||[];if(l==='ru'&&!r&&a.indexOf(s)>-1)location.replace('ru/'+s+'.html'+location.hash);else if(l!=='ru'&&r)location.replace('../'+s+'.html'+location.hash)})();</script>
+<script src="../search-ru.js"></script><script src="../../assets/js/i18n.js" defer></script><script src="../../assets/js/main.js" defer></script></head>
+<body><div class="bg"><i></i><i></i><i></i></div><header class="gl"><div class="wrap">
+ <a class="brand" href="../../index.html#top"><img src="../../assets/img/logo-mark.svg" alt=""><span class="bn">Qls<b>OS</b></span></a>
+ <button id="menu" class="lp-ib" aria-label="Menu">☰</button>
+ <nav>
+  <a href="../../index.html#principles">Principles</a><a href="../../index.html#architecture">Architecture</a><a href="../../index.html#why" data-ru="Почему">Why QlsOS</a><a href="../../index.html#roadmap" data-ru="Карта">Roadmap</a><a href="../../index.html#hardware" data-ru="Железо">Hardware</a><a href="../../index.html#start" data-ru="Старт">Quick start</a><a href="../../index.html#download">Download</a><a class="on" href="../index.html" data-ru="Документы">Docs</a><a href="../../index.html#contribute" data-ru="Вклад">Contribute</a>
+ </nav>
+ <div class="tl"><a class="lp-ib w" href="https://github.com/qlsdev/QlsOS">GitHub ↗</a><button id="lang" class="lp-ib w" aria-label="Language">RU</button><button id="theme" class="lp-ib" aria-label="Theme">◐</button></div>
+</div></header>
+<main><div class="wrap dgrid"><aside class="side gl"><input id="dq" type="search" placeholder="Поиск по документации…" autocomplete="off"><div id="dres"></div><nav class="dn"><a class="on" href="readme.html">Обзор</a><div class="toc"><a href="#дизайн-вкратце">Дизайн вкратце</a><a href="#что-работает-сегодня">Что работает сегодня</a><a href="#требования">Требования</a><a href="#быстрый-старт">Быстрый старт</a><a href="#первые-шаги-в-шелле">Первые шаги в шелле</a><a href="#устройство-репозитория">Устройство репозитория</a><a href="#ограничения-о-которых-стоит-знать">Ограничения, о которых стоит знать</a><a href="#лицензия">Лицензия</a></div><a class="" href="../project.html">Проект</a><a class="" href="../contract.html">Контракт архитектуры</a><a class="" href="../code-layout.html">Устройство кода</a><a class="" href="../hal-design.html">Дизайн HAL</a><a class="" href="../elf-loader.html">ELF-загрузчик</a><a class="" href="hardware-checklist.html">Чек-лист железа</a><a class="" href="../history.html">История</a></nav></aside><article class="doc gl"><h1 id="qlsos-quick-light-secure-os">QlsOS (Quick Light Secure OS)</h1>
+<p><strong>QlsOS</strong> (<em>Quick Light Secure OS</em>) — небольшое <strong>capability-микроядро</strong>, написанное с нуля: свой загрузчик, ядро, драйверы и шелл, без сторонних библиотек. Ядро полностью своё (Linux/WSL нужен только как среда сборки). Работает на <strong>x86 (32 бита)</strong> и <strong>ARM (Cortex-A15, QEMU <code>virt</code>)</strong>; x86-порт грузится в QEMU и имеет загрузчик, подготовленный для настоящих ПК (BIOS, USB-флешка). Цель первого релиза — <strong>v1.0.0</strong>.</p>
+<p>Цели дизайна: <strong>маленькая</strong> (код ядра меньше 64 KiB к v1.0.0), <strong>безопасная</strong> (задача трогает только то, на что у неё есть handle), <strong>быстрый запуск программ</strong> и достаточно лёгкая для самых слабых IoT-устройств.</p>
+<blockquote>Краткое описание проекта и статус: <a href="../project.html"><code>PROJECT.md</code></a> · Контракт архитектуры: <a href="../contract.html"><code>ARCHITECTURE.md</code></a> · Устройство кода: <a href="../code-layout.html"><code>docs/architecture.md</code></a></blockquote>
+<h2 id="дизайн-вкратце">Дизайн вкратце</h2>
+<ul><li><strong>Всё идёт через каналы и handles.</strong> Handle — единственный способ, которым задача ссылается на объект ядра. Задача видит только выданные ей handles; права можно только сужать, никогда не расширять; handle можно отозвать или ограничить по времени.</li><li><strong>Нет PID, сигналов и <code>fork</code>/<code>wait</code>.</strong> Программа запускается через <code>spawn</code>; то, как она завершилась, приходит одним сообщением по каналу результата; задачу останавливают или убивают через handle задачи.</li><li><strong>Система живёт в userspace.</strong> <em>System Dispatcher</em> в ring 3 запускает сервисы и выдаёт каналы клиентам; консоль (VGA) и клавиатура — драйверы-задачи в ring 3; шелл тоже есть как программа ring 3 (<code>sh</code>). Шелл в ядре остаётся как тестовый и запасной. Доступ к устройствам сам по себе capability (области памяти, порты ввода-вывода и линии прерываний — как handles).</li><li><strong>Код 64-bit clean</strong> (<code>uintptr_t</code>, <code>size_t</code>, типы фиксированной ширины, проверяется <code>make check64</code>); 64-битный порт и другие платформы появятся после v1.0.0 через HAL.</li><li><strong>Каждый шаг закрыт тестом</strong> (на хосте под ASan/UBSan и/или в QEMU).</li></ul>
+<h2 id="что-работает-сегодня">Что работает сегодня</h2>
+<ul><li><strong>x86:</strong> свой двухстадийный загрузчик (читает карту памяти BIOS, использует LBA или CHS, как позволяет BIOS, <strong>проверяет CRC-32 ядра перед прыжком</strong>), защищённый режим, paging, менеджер физической памяти, куча, вытесняющий round-robin планировщик, задачи ring 3 со своими page directory, системные вызовы <code>int 0x80</code>, клавиатура и мышь PS/2, текстовая консоль VGA с прокруткой, ATA/IDE, RTC, PCI, перезагрузка и выключение через ACPI.</li><li><strong>Задачи:</strong> загрузчик ELF32, <code>spawn</code> из ring 3 (новая задача получает ровно выданные ей handles), канал результата, handle управления задачей (stop / resume / kill), лимиты на задачу (кадры памяти, handles), аккуратная обработка сбоев (падение убивает только эту задачу), блокирующий <code>sleep</code> и блокирующие вызовы каналов (без опроса, без нагрузки на CPU при ожидании).</li><li><strong>Handles и каналы:</strong> таблица handles на каждую задачу, каналы с ограниченными очередями (сообщения по 64 байта), передача handles в сообщениях (те же права или меньше), <code>revoke</code> и ограничение handles по времени, точное освобождение каждого объекта (проверено тестами), <code>caps</code> — посмотреть, кто чем владеет.</li><li><strong>Система в userspace:</strong> System Dispatcher с контролируемыми сервисами, сервис консоли (<code>consoled</code>) и сервис клавиатуры (<code>kbdd</code>) как драйверы ring 3 с автоматическим возвратом к драйверу ядра, шелл <code>sh</code> в ring 3 с командой <code>run prog [args] [--grant name[:rights]]</code>.</li><li><strong>Хранилище:</strong> слой VFS, RAM-диск, initrd и <strong>QlsFS</strong> (плоская файловая система на ATA-диске).</li><li><strong>Подготовка к реальному железу:</strong> образ для загрузки с USB (<code>make usb.img</code>, безопасная запись <code>make usb-write</code>), карта памяти, которую терпят настоящие BIOS, без зависаний на машинах без COM-порта, таблицы ACPI выше 256 МБ доступны (проверено на 32 МБ ... 3,5 ГБ памяти в QEMU).</li><li><strong>ARM:</strong> UART-шелл, GICv2, generic timer, сброс и выключение через PSCI, многозадачность (пока без paging и ring 3).</li></ul>
+<p>Размер ядра сегодня: около 77 КБ кода (<code>make ksize</code>); цель v1.0.0 — 64 KiB, достигается, когда шелл, старые драйверы и тесты внутри ядра уйдут из ring 0.</p>
+<h2 id="требования">Требования</h2>
+<ul><li>Linux или <strong>Windows + WSL</strong></li><li><code>nasm</code>, <code>gcc</code> (с поддержкой <code>-m32</code>), <code>binutils</code>, <code>make</code>, <code>qemu-system-i386</code>, <code>python3</code> (тестовая обвязка QEMU)</li><li>Только для порта ARM: <code>gcc-arm-none-eabi</code>, <code>qemu-system-arm</code></li></ul>
+<pre><code>sudo apt install nasm build-essential gcc-multilib python3 qemu-system-x86
+sudo apt install gcc-arm-none-eabi binutils-arm-none-eabi qemu-system-arm   # только ARM</code></pre>
+<h2 id="быстрый-старт">Быстрый старт</h2>
+<p><strong>Windows</strong></p>
+<div class="tw"><table><thead><tr><th>Ситуация</th><th>Что запустить</th></tr></thead><tbody><tr><td>WSL2 работает (WSLg показывает окно QEMU)</td><td><code>run.bat</code> (ARM: <code>run.bat arm</code>)</td></tr><tr><td>Только WSL1 (нет «Virtual Machine Platform»)</td><td><code>run_wsl1.bat</code> — собирает в WSL1, запускает QEMU для Windows</td></tr></tbody></table></div>
+<p>Логи лежат в папке <code>logs/</code> рядом со скриптами (<code>last-build.log</code>, <code>last-errors.log</code>, <code>last-qemu.log</code>, ...).</p>
+<p><strong>Linux / внутри WSL</strong></p>
+<pre><code>make                # собрать disk.img (+ disk_data.img при первом запуске)
+make run            # QEMU с окном
+make run-headless   # QEMU без окна, серийный лог в консоли
+make arm            # собрать ядро ARM
+make run-arm        # запустить в qemu-system-arm -M virt (UART в терминале)
+make usb.img        # образ для USB-флешки (загрузка BIOS/CSM); make usb-write DEV=/dev/sdX безопасно записывает его
+make clean</code></pre>
+<p><strong>Проверки</strong></p>
+<pre><code>make check64             # общий код должен быть 64-bit clean
+make ksize               # размер ядра против бюджета
+make test                # загрузчик ELF и стек пользователя на хосте (ASan/UBSan, без QEMU)
+make test-handle-host  test-channel-host  test-task-host  test-revoke-host  test-caps-host  ...   # логика ядра на хосте
+make test-spawn  test-result  test-ctl  test-dispatcher  test-sh  test-run  test-caps  ...        # в QEMU (каждый заодно гоняет прежние самотесты)
+make test-boot  test-usbimg  test-hw  test-mmap  test-crc32                                       # загрузчик, образы, странные машины</code></pre>
+<p>Полный список целей — в <code>Makefile</code>; что проверяет каждый тест, написано в <a href="../contract.html"><code>ARCHITECTURE.md</code></a>.</p>
+<h2 id="первые-шаги-в-шелле">Первые шаги в шелле</h2>
+<pre><code>help                  список тем справки         help all   всё
+ps                    задачи (состояние, тики CPU)   caps [N]   кто какими handles владеет и откуда каждый взялся
+exec hello            запустить программу (ELF) в ring 3; шелл ждёт её результата
+bg spin               запуск в фоне              jobs  stop %N  cont %N  kill %N   (через handle задачи)
+sh                    шелл в ring 3 (у него экран и клавиатура до `exit`)
+                      внутри:  run hello   run prog [args] --grant name:rights
+dispatcher start      запустить System Dispatcher и его сервисы      (list | ping &lt;i&gt; &lt;text&gt; | kill &lt;i&gt; | ...)
+console  kbd          экран / клавиатура — у сервисов  (on | off | kill; у kbd ещё status)
+faulttest  sleeptest  blocktest  handletest  channeltest  spawntest  resulttest  ctltest  ...   самотесты (help tests)
+bench                 замер загрузки и spawn, пишется в baseline.txt
+write note hello      создать файл на QlsFS     cat note       вывести его</code></pre>
+<p>Готовые программы для <code>exec</code>: <code>hello</code>, <code>crash</code>, <code>sleeper</code>, <code>nop</code>, <code>spin</code>. Полный список команд: <code>help all</code>.</p>
+<h2 id="устройство-репозитория">Устройство репозитория</h2>
+<pre><code>boot/               загрузчик x86 (две стадии)
+kernel/src/         код, не зависящий от архитектуры (шелл, планировщик, handles, каналы, куча, VFS, QlsFS, ...)
+kernel/include/     заголовки, не зависящие от архитектуры
+kernel/hal/hal.h    контракт HAL между общим кодом и архитектурами
+kernel/arch/x86/    всё, что специфично для x86 (драйверы, paging, ring 3, системные вызовы, загрузчик ELF, самотесты ядра)
+kernel/arch/arm/    всё, что специфично для ARM
+user/               программы ring 3 (C, статический ELF): dispatcher, сервисы, драйверы, шелл, тесты + crt0 + linker script + usys.h
+tests/              host-тесты (ASan/UBSan) и тестовая обвязка QEMU
+tools/              crc32 (проверка образа), usb-write.sh (безопасная запись образа)
+ARCHITECTURE.md     контракт архитектуры capability-микроядра
+docs/               architecture.md, hal-design.md, elf-loader.md, hardware-checklist.md, history.md</code></pre>
+<h2 id="ограничения-о-которых-стоит-знать">Ограничения, о которых стоит знать</h2>
+<ul><li>Загрузчик загружает ядро не больше <strong>512 KiB</strong> (<code>make</code> громко падает выше этого) и отказывается запускать ядро с неверной CRC-32.</li><li>QlsFS плоская: до 64 файлов, имена до 23 символов; <code>rm</code> не возвращает место на диске.</li><li>В ARM пока нет paging, PMM, ring 3 и системных вызовов.</li><li>Шелл x86 читает клавиатуру PS/2: ПК, у которого только USB-клавиатура без эмуляции PS/2 в BIOS, пока остаётся без ввода.</li><li>Менеджер физической памяти управляет первыми 64 МБ.</li><li>Если QEMU «перестаёт работать» после нескольких запусков, скорее всего, прежний QEMU всё ещё держит <code>disk.img</code> — см. раздел про неполадки в <a href="../history.html"><code>docs/history.md</code></a> (помогает <code>wsl --shutdown</code> из Windows).</li></ul>
+<h2 id="лицензия">Лицензия</h2>
+<p><a href="https://github.com/qlsdev/QlsOS#MPL-2.0-1-ov-file">MPL-2.0</a> (Mozilla Public License 2.0).</p><p class="src">Источник: <a href="https://github.com/qlsdev/QlsOS/blob/HEAD/README.md">README.md</a> · <a href="../readme.html">оригинал на английском</a></p></article></div></main>
+<footer class="gl"><div class="wrap"><span>© QlsOS · MPL-2.0</span><span><a href="https://github.com/qlsdev/QlsOS">GitHub ↗</a></span></div></footer></body></html>
