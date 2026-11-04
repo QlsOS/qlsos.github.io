@@ -1,0 +1,10 @@
+{
+ "updated": "2026-11-03",
+ "kernel_budget_now": 85248,
+ "kernel_budget_v1": 65536,
+ "test_targets": 56,
+ "host_tests": 22,
+ "kernel_loc": 19005,
+ "user_loc": 3856,
+ "tests_loc": 7641
+}
